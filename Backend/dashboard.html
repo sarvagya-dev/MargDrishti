@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MARG-DRISHTI — Road Risk Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@300;400;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #06090e;
+      --card-bg: rgba(14, 20, 32, 0.75);
+      --card-border: rgba(0, 240, 255, 0.15);
+      --neon-cyan: #00f0ff;
+      --neon-green: #00ff66;
+      --neon-yellow: #ffcc00;
+      --neon-red: #ff2a5f;
+      --text-main: #e2e8f0;
+      --text-muted: #64748b;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        linear-gradient(to bottom, rgba(6, 9, 14, 0.9), rgba(6, 9, 14, 0.98));
+      color: var(--text-main);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* HEADER */
+    header {
+      width: 100%;
+      text-align: center;
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: rgba(0, 240, 255, 0.05);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      color: var(--neon-cyan);
+    }
+
+    .dot-live {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--neon-green);
+      box-shadow: 0 0 8px var(--neon-green);
+      animation: pulse 1.5s infinite;
+    }
+
+    .dot-error {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--neon-red);
+      box-shadow: 0 0 8px var(--neon-red);
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.3;
+        transform: scale(0.9);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+
+      100% {
+        opacity: 0.3;
+        transform: scale(0.9);
+      }
+    }
+
+    /* NAVIGATION TABS */
+    .nav-tabs {
+      display: flex;
+      width: 100%;
+      background: rgba(14, 20, 32, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 6px;
+      backdrop-filter: blur(10px);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(0, 240, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: #06090e;
+      background: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    /* VIEW SECTIONS */
+    .tab-content {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* CARDS COMMON */
+    .hud-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hud-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--neon-cyan);
+    }
+
+    /* DRIVER VIEW STYLES */
+    .driver-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      align-items: center;
+      padding: 28px 20px;
+    }
+
+    .driver-card.card-high {
+      border-color: rgba(255, 42, 95, 0.4);
+      background: radial-gradient(circle at 50% 0%, rgba(255, 42, 95, 0.15) 0%, rgba(14, 20, 32, 0.9) 70%);
+    }
+
+    .driver-card.card-high::before {
+      background: var(--neon-red);
+      box-shadow: 0 0 10px var(--neon-red);
+    }
+
+    .driver-card.card-medium {
+      border-color: rgba(255, 204, 0, 0.4);
+      background: radial-gradient(circle at 50% 0%, rgba(255, 204, 0, 0.12) 0%, rgba(14, 20, 32, 0.9) 70%);
+    }
+
+    .driver-card.card-medium::before {
+      background: var(--neon-yellow);
+      box-shadow: 0 0 10px var(--neon-yellow);
+    }
+
+    .driver-card.card-clear {
+      border-color: rgba(0, 255, 102, 0.3);
+      background: radial-gradient(circle at 50% 0%, rgba(0, 255, 102, 0.08) 0%, rgba(14, 20, 32, 0.9) 70%);
+    }
+
+    .driver-card.card-clear::before {
+      background: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green);
+    }
+
+    .alert-header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .badge-high {
+      background: rgba(255, 42, 95, 0.2);
+      border: 1px solid var(--neon-red);
+      color: var(--neon-red);
+    }
+
+    .badge-medium {
+      background: rgba(255, 204, 0, 0.2);
+      border: 1px solid var(--neon-yellow);
+      color: var(--neon-yellow);
+    }
+
+    .badge-clear {
+      background: rgba(0, 255, 102, 0.15);
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+    }
+
+    .driver-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .metrics-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      margin: 10px 0;
+      width: 100%;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .caution-box {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    .chain-warning-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255, 42, 95, 0.25);
+      border: 1px dashed var(--neon-red);
+      color: #ff85a1;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      border-radius: 6px;
+      animation: pulse 1.2s infinite;
+    }
+
+    .location-text {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
+    /* AUTHORITY VIEW STYLES */
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .stat-val {
+      font-family: var(--font-mono);
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--neon-cyan);
+    }
+
+    .stat-lbl {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hotspot-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hotspot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+    }
+
+    .hotspot-id {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-low-sm {
+      background: rgba(0, 255, 102, 0.15);
+      color: var(--neon-green);
+      border: 1px solid var(--neon-green);
+    }
+
+    .badge-medium-sm {
+      background: rgba(255, 204, 0, 0.15);
+      color: var(--neon-yellow);
+      border: 1px solid var(--neon-yellow);
+    }
+
+    .badge-high-sm {
+      background: rgba(255, 42, 95, 0.15);
+      color: var(--neon-red);
+      border: 1px solid var(--neon-red);
+    }
+
+    .authority-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .info-group {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .info-label {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .info-val {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .breakdown-pill {
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      color: var(--neon-cyan);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+
+    .chain-warning-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 42, 95, 0.2);
+      border: 1px solid var(--neon-red);
+      color: #ff6b8b;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* ERROR BANNER */
+    #errorBanner {
+      display: none;
+      width: 100%;
+      padding: 10px 16px;
+      background: rgba(255, 42, 95, 0.2);
+      border: 1px solid var(--neon-red);
+      color: var(--neon-red);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .stats-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics-row {
+        gap: 16px;
+      }
+
+      .metric-value {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <header>
+      <div class="brand-tag">MARG-DRISHTI INTELLIGENCE</div>
+      <h1>Road Risk Dashboard</h1>
+      <div class="header-status">
+        <div id="connectionPill" class="status-pill">
+          <div id="statusDot" class="dot-live"></div>
+          <span id="statusText">LIVE • POLLING (3s)</span>
+        </div>
+        <span id="lastSyncText">LAST SYNC: --:--:--</span>
+      </div>
+    </header>
+
+    <!-- ERROR BANNER -->
+    <div id="errorBanner">
+      ⚠️ DISCONNECTED: Unable to reach backend at http://localhost:8000/hotspots. Retrying...
+    </div>
+
+    <!-- TAB SWITCHER -->
+    <nav class="nav-tabs">
+      <button id="tabDriverBtn" class="tab-btn active" onclick="switchTab('driver')">
+        🚗 Driver View
+      </button>
+      <button id="tabAuthorityBtn" class="tab-btn" onclick="switchTab('authority')">
+        🛡️ Authority View
+      </button>
+    </nav>
+
+    <!-- TAB 1: DRIVER VIEW -->
+    <section id="driverView" class="tab-content active">
+      <div id="driverCardContainer" style="width: 100%;">
+        <!-- Dynamic Driver Card Rendered Here -->
+      </div>
+    </section>
+
+    <!-- TAB 2: AUTHORITY VIEW -->
+    <section id="authorityView" class="tab-content">
+      <div class="stats-summary">
+        <div class="stat-box">
+          <span class="stat-lbl">Monitored Hotspots</span>
+          <span id="statTotal" class="stat-val">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">Active High Risk</span>
+          <span id="statHigh" class="stat-val" style="color: var(--neon-red);">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">Chain Alerts</span>
+          <span id="statChain" class="stat-val" style="color: var(--neon-yellow);">0</span>
+        </div>
+      </div>
+
+      <div id="authorityList" style="display: flex; flex-direction: column; gap: 14px; width: 100%;">
+        <!-- Dynamic Authority Hotspot Cards Rendered Here -->
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:8000/hotspots';
+    let currentHotspots = [];
+    let isConnected = true;
+
+    // TAB SWITCHING
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
+
+      if (tabName === 'driver') {
+        document.getElementById('tabDriverBtn').classList.add('active');
+        document.getElementById('driverView').classList.add('active');
+      } else {
+        document.getElementById('tabAuthorityBtn').classList.add('active');
+        document.getElementById('authorityView').classList.add('active');
+      }
+    }
+
+    // FETCH HOTSPOTS FROM BACKEND
+    async function fetchHotspots() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+        const data = await res.json();
+
+        currentHotspots = data;
+        setConnectionState(true);
+        renderViews();
+      } catch (err) {
+        console.warn("Polling error:", err);
+        setConnectionState(false);
+      }
+    }
+
+    function setConnectionState(online) {
+      isConnected = online;
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      const errBanner = document.getElementById('errorBanner');
+      const syncText = document.getElementById('lastSyncText');
+
+      if (online) {
+        dot.className = 'dot-live';
+        text.innerText = 'LIVE • POLLING (3s)';
+        errBanner.style.display = 'none';
+        const now = new Date();
+        syncText.innerText = `LAST SYNC: ${now.toLocaleTimeString()}`;
+      } else {
+        dot.className = 'dot-error';
+        text.innerText = 'DISCONNECTED';
+        errBanner.style.display = 'block';
+      }
+    }
+
+    // RENDER VIEWS
+    function renderViews() {
+      renderDriverView();
+      renderAuthorityView();
+    }
+
+    // DRIVER VIEW LOGIC
+    function renderDriverView() {
+      const container = document.getElementById('driverCardContainer');
+
+      // Filter non-LOW risk hotspots
+      const nonLowHotspots = currentHotspots.filter(h => h.status !== 'LOW');
+
+      if (nonLowHotspots.length === 0) {
+        // Safe state
+        container.innerHTML = `
+        <div class="hud-card driver-card card-clear">
+          <div class="alert-header-badge badge-clear">
+            <span>✅ ALL CLEAR</span>
+          </div>
+          <div class="driver-title" style="color: var(--neon-green);">No road-risk hotspots nearby.</div>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Current segment path monitored. Zero high-risk braking zones detected in immediate proximity.
+          </p>
+          <div class="location-text">STATUS: NORMAL SCANNING</div>
+        </div>
+      `;
+        return;
+      }
+
+      // Pick highest risk_score hotspot among non-LOW
+      nonLowHotspots.sort((a, b) => b.risk_score - a.risk_score);
+      const topHotspot = nonLowHotspots[0];
+
+      const isHigh = topHotspot.status === 'HIGH';
+      const cardClass = isHigh ? 'card-high' : 'card-medium';
+      const badgeClass = isHigh ? 'badge-high' : 'badge-medium';
+      const scoreColor = isHigh ? 'var(--neon-red)' : 'var(--neon-yellow)';
+
+      const cautionText = isHigh
+        ? "DANGER: Multiple heavy braking occurrences reported ahead. Reduce speed immediately and increase vehicle gap!"
+        : "CAUTION: Abnormal braking cluster identified on this stretch. Proceed with heightened awareness.";
+
+      const chainHtml = topHotspot.possible_chain
+        ? `<div class="chain-warning-pill">⚡ POSSIBLE CHAIN COLLISION DETECTED</div>`
+        : '';
+
+      container.innerHTML = `
+      <div class="hud-card driver-card ${cardClass}">
+        <div class="alert-header-badge ${badgeClass}">
+          <span>⚠️ ROAD-RISK HOTSPOT AHEAD</span>
+        </div>
+
+        <div class="driver-title" style="color: ${scoreColor};">
+          ${topHotspot.status} RISK ZONE
+        </div>
+
+        ${chainHtml}
+
+        <div class="metrics-row">
+          <div class="metric-item">
+            <div class="metric-value" style="color: ${scoreColor};">${topHotspot.risk_score}</div>
+            <div class="metric-label">Risk Score</div>
+          </div>
+          <div style="font-size: 2rem; color: var(--text-muted); font-weight: 300;">|</div>
+          <div class="metric-item">
+            <div class="metric-value" style="color: var(--neon-cyan);">~140m</div>
+            <div class="metric-label">Distance</div>
+          </div>
+        </div>
+
+        <div class="caution-box">
+          <strong>ALERT:</strong> ${cautionText}
+        </div>
+
+        <div class="location-text">
+          LAT: ${topHotspot.latitude.toFixed(6)} | LONG: ${topHotspot.longitude.toFixed(6)}
+        </div>
+      </div>
+    `;
+    }
+
+    // AUTHORITY VIEW LOGIC
+    function renderAuthorityView() {
+      const totalEl = document.getElementById('statTotal');
+      const highEl = document.getElementById('statHigh');
+      const chainEl = document.getElementById('statChain');
+      const listContainer = document.getElementById('authorityList');
+
+      // Update Stats Summary
+      totalEl.innerText = currentHotspots.length;
+      highEl.innerText = currentHotspots.filter(h => h.status === 'HIGH').length;
+      chainEl.innerText = currentHotspots.filter(h => h.possible_chain).length;
+
+      if (currentHotspots.length === 0) {
+        listContainer.innerHTML = `
+        <div class="hud-card empty-state">
+          No hotspots registered in system database.
+        </div>
+      `;
+        return;
+      }
+
+      // Sort descending by risk_score
+      const sorted = [...currentHotspots].sort((a, b) => b.risk_score - a.risk_score);
+
+      listContainer.innerHTML = sorted.map(h => {
+        let badgeClass = 'badge-low-sm';
+        let scoreColor = 'var(--neon-green)';
+        if (h.status === 'HIGH') {
+          badgeClass = 'badge-high-sm';
+          scoreColor = 'var(--neon-red)';
+        } else if (h.status === 'MEDIUM') {
+          badgeClass = 'badge-medium-sm';
+          scoreColor = 'var(--neon-yellow)';
+        }
+
+        const chainBadge = h.possible_chain
+          ? `<span class="chain-warning-badge">⚠️ CHAIN COLLISION RISK</span>`
+          : '';
+
+        const breakdownStr = Object.entries(h.event_breakdown || {})
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(', ') || 'NONE';
+
+        return `
+        <div class="hud-card hotspot-card">
+          <div class="hotspot-header">
+            <div class="hotspot-id">
+              <span>📍</span> ${h.hotspot_id}
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              ${chainBadge}
+              <span class="status-badge ${badgeClass}">${h.status}</span>
+              <span style="font-family: var(--font-mono); font-weight: 800; font-size: 1rem; color: ${scoreColor};">
+                SCORE: ${h.risk_score}
+              </span>
+            </div>
+          </div>
+
+          <div class="authority-grid">
+            <div class="info-group">
+              <div class="info-label">Unique Vehicles</div>
+              <div class="info-val" style="color: var(--neon-cyan);">${h.unique_vehicles}</div>
+            </div>
+            <div class="info-group">
+              <div class="info-label">Total Events</div>
+              <div class="info-val">${h.total_events}</div>
+            </div>
+            <div class="info-group">
+              <div class="info-label">Event Breakdown</div>
+              <div class="breakdown-pill">${breakdownStr}</div>
+            </div>
+            <div class="info-group">
+              <div class="info-label">Coordinates</div>
+              <div class="info-val" style="font-size: 0.75rem;">${h.latitude.toFixed(6)}, ${h.longitude.toFixed(6)}</div>
+            </div>
+            <div class="info-group">
+              <div class="info-label">First Detected</div>
+              <div class="info-val" style="font-size: 0.72rem;">${formatTime(h.first_detected)}</div>
+            </div>
+            <div class="info-group">
+              <div class="info-label">Last Observed</div>
+              <div class="info-val" style="font-size: 0.72rem;">${formatTime(h.last_observed)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    function formatTime(isoStr) {
+      if (!isoStr) return 'N/A';
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleString();
+      } catch (e) {
+        return isoStr;
+      }
+    }
+
+    // INITIALIZE & START POLLING
+    fetchHotspots();
+    setInterval(fetchHotspots, 3000);
+  </script>
+
+</body>
+
+</html>

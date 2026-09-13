@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MARG-DRISHTI EDGE ROAD SENSOR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@300;400;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #06090e;
+      --card-bg: rgba(14, 20, 32, 0.75);
+      --card-border: rgba(0, 240, 255, 0.15);
+      --neon-cyan: #00f0ff;
+      --neon-green: #00ff66;
+      --neon-yellow: #ffcc00;
+      --neon-red: #ff2a5f;
+      --text-main: #e2e8f0;
+      --text-muted: #64748b;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        linear-gradient(to bottom, rgba(6, 9, 14, 0.9), rgba(6, 9, 14, 0.98));
+      color: var(--text-main);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Header & Title */
+    header {
+      text-align: center;
+      padding: 12px 0 4px 0;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+    }
+
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .vehicle-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--neon-cyan);
+    }
+
+    /* HARD BRAKING BANNER */
+    #alertBanner {
+      display: none;
+      background: linear-gradient(135deg, rgba(255, 42, 95, 0.9) 0%, rgba(180, 0, 45, 0.95) 100%);
+      border: 2px solid #ff5e83;
+      box-shadow: 0 0 25px rgba(255, 42, 95, 0.6);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      animation: alertPulse 0.6s infinite alternate cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    @keyframes alertPulse {
+      0% {
+        transform: scale(0.99);
+        box-shadow: 0 0 15px rgba(255, 42, 95, 0.5);
+      }
+
+      100% {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(255, 42, 95, 0.9);
+      }
+    }
+
+    .alert-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .alert-sub {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #ffe6ec;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Status Indicators Row */
+    .status-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 10px 4px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background-color: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green);
+    }
+
+    .dot.warning {
+      background-color: var(--neon-yellow);
+      box-shadow: 0 0 10px var(--neon-yellow);
+    }
+
+    .dot.error {
+      background-color: var(--neon-red);
+      box-shadow: 0 0 10px var(--neon-red);
+    }
+
+    .status-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+    }
+
+    /* Main Telemetry Grid */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .gauge-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gauge-box.full-width {
+      grid-column: span 2;
+    }
+
+    .gauge-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--neon-cyan);
+      opacity: 0.5;
+    }
+
+    .gauge-box.highlight::before {
+      background: var(--neon-yellow);
+      opacity: 0.8;
+    }
+
+    .gauge-box.danger::before {
+      background: var(--neon-red);
+      opacity: 1;
+    }
+
+    .gauge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .gauge-title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .gauge-unit {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--neon-cyan);
+    }
+
+    .gauge-value {
+      font-family: var(--font-mono);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 8px;
+    }
+
+    .gauge-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: var(--font-mono);
+    }
+
+    /* Control Panel Buttons */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.08);
+      color: var(--neon-cyan);
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+      background: rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(0, 150, 255, 0.3) 100%);
+      border-color: var(--neon-cyan);
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, rgba(255, 204, 0, 0.15) 0%, rgba(255, 140, 0, 0.25) 100%);
+      border-color: var(--neon-yellow);
+      color: var(--neon-yellow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+    }
+
+    /* Configuration section */
+    .config-box {
+      background: rgba(14, 20, 32, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .config-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .config-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--neon-cyan);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    /* Log Output Box */
+    #logBox {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--neon-green);
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-entry {
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
+    .log-entry.error {
+      color: var(--neon-red);
+    }
+
+    .log-entry.warn {
+      color: var(--neon-yellow);
+    }
+
+    .log-entry.info {
+      color: var(--neon-cyan);
+    }
+
+    /* ── CAMERA EVIDENCE CAPTURE ──────────────────────────────────────
+       Camera provides supporting visual evidence for sensor-triggered
+       road events. This is evidence capture only — NOT pothole/road-
+       object AI classification. The prototype does not claim that hard
+       braking proves a pothole or specific hazard.
+    ────────────────────────────────────────────────────────────────── */
+    #cameraPreview {
+      width: 100%;
+      max-height: 160px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      background: #000;
+      object-fit: cover;
+      display: none; /* hidden until camera starts */
+    }
+
+    #evidencePanel {
+      display: none;
+      background: rgba(14, 20, 32, 0.85);
+      border: 1px solid rgba(0, 255, 102, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #evidenceBadge {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--neon-green);
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    #evidenceVideo {
+      width: 100%;
+      border-radius: 8px;
+      background: #000;
+    }
+
+    .btn-cam {
+      background: linear-gradient(135deg, rgba(0, 255, 102, 0.1) 0%, rgba(0, 180, 80, 0.2) 100%);
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand-tag">MARG-DRISHTI EDGE V1.0</div>
+      <h1>Road Risk Telemetry</h1>
+      <div class="vehicle-badge">
+        <span>VEHICLE:</span>
+        <strong id="vehicleIdDisplay">REAL_01</strong>
+      </div>
+    </header>
+
+    <!-- HARD BRAKING BANNER -->
+    <div id="alertBanner">
+      <div class="alert-title">
+        <span>⚠️ HARD BRAKING DETECTED</span>
+      </div>
+      <div class="alert-sub" id="alertConfidence">Confidence: 85%</div>
+    </div>
+
+    <!-- Status Indicators Row -->
+    <div class="status-card">
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="dot active" id="dotCam"></div>
+          <span class="status-label">CAMERA</span>
+        </div>
+        <div class="status-item">
+          <div class="dot" id="dotGps"></div>
+          <span class="status-label">GPS</span>
+        </div>
+        <div class="status-item">
+          <div class="dot" id="dotImu"></div>
+          <span class="status-label">IMU</span>
+        </div>
+        <div class="status-item">
+          <div class="dot" id="dotNet"></div>
+          <span class="status-label">NETWORK</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Telemetry Grid -->
+    <div class="telemetry-grid">
+      <!-- Acceleration / Deceleration -->
+      <div class="gauge-box highlight" id="accelBox">
+        <div class="gauge-header">
+          <span class="gauge-title">ACCELERATION</span>
+          <span class="gauge-unit">m/s²</span>
+        </div>
+        <div class="gauge-value" id="accelVal">0.00</div>
+        <div class="gauge-sub" id="accelSub">DECEL THRESHOLD: -4.5</div>
+      </div>
+
+      <!-- Speed -->
+      <div class="gauge-box">
+        <div class="gauge-header">
+          <span class="gauge-title">SPEED</span>
+          <span class="gauge-unit">km/h</span>
+        </div>
+        <div class="gauge-value" id="speedVal">0.0</div>
+        <div class="gauge-sub" id="speedSub">HEADING: 0.0°</div>
+      </div>
+
+      <!-- Location / Coordinates -->
+      <div class="gauge-box full-width">
+        <div class="gauge-header">
+          <span class="gauge-title">GEOLOCATION</span>
+          <span class="gauge-unit" id="gpsAccuracy">±0m</span>
+        </div>
+        <div class="gauge-value" style="font-size: 1.1rem; font-family: var(--font-mono);" id="coordsVal">
+          0.000000, 0.000000
+        </div>
+        <div class="gauge-sub" id="tsVal">TIMESTAMP: --:--:--</div>
+      </div>
+    </div>
+
+    <!-- Camera live preview (shown after permission granted) -->
+    <video id="cameraPreview" autoplay muted playsinline></video>
+
+    <!-- Evidence playback panel (shown after a recording is saved) -->
+    <div id="evidencePanel">
+      <div id="evidenceBadge">📹 ROAD EVENT EVIDENCE CAPTURED</div>
+      <video id="evidenceVideo" controls></video>
+    </div>
+
+    <!-- Control Buttons -->
+    <div class="controls">
+      <button class="btn btn-primary" id="btnStartSensors">
+        <span>⚡</span> START SENSORS & PERMISSIONS
+      </button>
+
+      <!-- TEST CAMERA: requests rear camera independently for verification -->
+      <button class="btn btn-cam btn" id="btnTestCamera">
+        <span>📷</span> TEST CAMERA
+      </button>
+
+      <button class="btn btn-warning" id="btnSimulateBrake">
+        <span>🚨</span> SIMULATE HARD BRAKING (-6.8 m/s²)
+      </button>
+
+      <button class="btn btn-secondary" id="btnSendManual">
+        <span>📡</span> SEND TO SERVER (MANUAL)
+      </button>
+    </div>
+
+    <!-- Configuration Box -->
+    <div class="config-box">
+      <span class="config-label">INGESTION BACKEND URL</span>
+      <input type="text" id="backendUrlInput" class="config-input" value="http://localhost:8000/events" />
+    </div>
+
+    <!-- Log Console -->
+    <div id="logBox">
+      <div class="log-entry info">[SYSTEM] Telemetry edge sensor initialized.</div>
+    </div>
+  </div>
+
+  <script>
+    // Use origin-relative URLs so the page works regardless of which tunnel/IP is active.
+    // When served from FastAPI at /phone, window.location.origin is the FastAPI server.
+    let BACKEND_URL = window.location.origin + "/events";
+    const EVIDENCE_URL = window.location.origin + "/evidence";
+    // Telemetry State
+    let vehicleId = localStorage.getItem("marg_vehicle_id");
+    if (!vehicleId) {
+      vehicleId = "REAL_" + Math.floor(1000 + Math.random() * 9000);
+      localStorage.setItem("marg_vehicle_id", vehicleId);
+    }
+    document.getElementById("vehicleIdDisplay").textContent = vehicleId;
+
+    let currentLat = 18.5204;
+    let currentLon = 73.8567;
+    let currentSpeed = 0.0; // km/h
+    let currentHeading = 0.0; // degrees
+    let currentAccel = 0.0; // m/s²
+    let lastPosition = null;
+    let lastPosTime = null;
+
+    // Hard Braking Detection State
+    let decelStartTime = null;
+    let isBrakingActive = false;
+    let lastTriggerTime = 0;
+    const BRAKE_THRESHOLD = 4.5; // m/s² magnitude of deceleration (-4.5 m/s²)
+    const SUSTAINED_MS = 300;    // continuous duration requirement
+    const COOLDOWN_MS = 3000;    // min delay between auto-triggers
+
+    // DOM Elements
+    const dotCam = document.getElementById("dotCam");
+    const dotGps = document.getElementById("dotGps");
+    const dotImu = document.getElementById("dotImu");
+    const dotNet = document.getElementById("dotNet");
+
+    const accelVal = document.getElementById("accelVal");
+    const accelBox = document.getElementById("accelBox");
+    const speedVal = document.getElementById("speedVal");
+    const speedSub = document.getElementById("speedSub");
+    const coordsVal = document.getElementById("coordsVal");
+    const gpsAccuracy = document.getElementById("gpsAccuracy");
+    const tsVal = document.getElementById("tsVal");
+    const logBox = document.getElementById("logBox");
+    const alertBanner = document.getElementById("alertBanner");
+    const alertConfidence = document.getElementById("alertConfidence");
+    const backendUrlInput = document.getElementById("backendUrlInput");
+
+    // Sync input field with BACKEND_URL
+    backendUrlInput.value = BACKEND_URL;
+    backendUrlInput.addEventListener("change", (e) => {
+      BACKEND_URL = e.target.value.trim();
+      addLog(`[CONFIG] Backend URL set to ${BACKEND_URL}`, "info");
+    });
+
+    function addLog(msg, type = "info") {
+      const entry = document.createElement("div");
+      entry.className = `log-entry ${type}`;
+      const timeStr = new Date().toLocaleTimeString();
+      entry.textContent = `[${timeStr}] ${msg}`;
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    // Health check network status — uses origin-relative / so it always resolves correctly
+    async function checkNetwork() {
+      try {
+        const res = await fetch(window.location.origin + "/", { method: "GET" });
+        if (res.ok) {
+          dotNet.className = "dot active";
+        } else {
+          dotNet.className = "dot warning";
+        }
+      } catch (e) {
+        dotNet.className = "dot error";
+      }
+    }
+    checkNetwork();
+    setInterval(checkNetwork, 10000);
+
+    // ── CAMERA EVIDENCE CAPTURE STATE ─────────────────────────────────
+    // Sensor anomaly detection triggers evidence capture.
+    // Camera provides supporting visual evidence — not AI classification.
+    let cameraStream = null;       // active MediaStream from rear camera
+    let mediaRecorder = null;      // current MediaRecorder instance
+    let recordedChunks = [];       // accumulates encoded video chunks
+
+    const cameraPreview  = document.getElementById("cameraPreview");
+    const evidencePanel  = document.getElementById("evidencePanel");
+    const evidenceVideo  = document.getElementById("evidenceVideo");
+
+    // Start rear camera and show live preview
+    async function startCamera() {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false
+        });
+        cameraPreview.srcObject = cameraStream;
+        cameraPreview.style.display = "block";
+        dotCam.className = "dot active";
+        addLog("[CAMERA] Rear camera active — evidence capture ready.", "info");
+      } catch (err) {
+        dotCam.className = "dot error";
+        addLog(`[CAMERA] Permission denied or unavailable: ${err.message}`, "error");
+      }
+    }
+
+    // Record ~5 s evidence clip starting at the braking trigger.
+    // Non-blocking: called after POST /events succeeds so we have an event_id.
+    // Simple post-trigger recording (no pre-buffer) keeps the sensor pipeline stable.
+    function startEvidenceRecording(eventId) {
+      if (!cameraStream || !window.MediaRecorder) {
+        addLog("[CAMERA] MediaRecorder unavailable — skipping evidence recording.", "warn");
+        return;
+      }
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+        return; // already recording, do not stack recordings
+      }
+
+      recordedChunks = [];
+      try {
+        mediaRecorder = new MediaRecorder(cameraStream);
+      } catch (e) {
+        addLog(`[CAMERA] MediaRecorder init failed: ${e.message}`, "error");
+        return;
+      }
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const mimeType = mediaRecorder.mimeType || "video/webm";
+        const blob = new Blob(recordedChunks, { type: mimeType });
+        // Show local playback immediately
+        const url = URL.createObjectURL(blob);
+        evidenceVideo.src = url;
+        evidencePanel.style.display = "flex";
+        addLog("[CAMERA] Evidence clip saved locally — uploading to server...", "info");
+        // Upload to backend (fire-and-forget from the sensor pipeline perspective)
+        uploadEvidenceToServer(eventId, blob, mimeType);
+      };
+
+      mediaRecorder.start();
+      addLog("[CAMERA] Evidence recording started (5 s).", "info");
+
+      // Stop after 5 seconds
+      setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+        }
+      }, 5000);
+    }
+
+    // Upload the recorded evidence Blob to POST /evidence via FormData.
+    // Never base64-encodes the video; uses raw multipart upload.
+    // Failure here does NOT affect the already-sent telemetry event.
+    async function uploadEvidenceToServer(eventId, blob, mimeType) {
+      const ext = mimeType.includes("mp4") ? ".mp4" : ".webm";
+      const formData = new FormData();
+      formData.append("event_id", String(eventId));
+      // Browser-generated filename; the server will replace it with a safe UUID name
+      formData.append("video", blob, `evidence${ext}`);
+
+      try {
+        const resp = await fetch(EVIDENCE_URL, {
+          method: "POST",
+          body: formData
+          // Note: do NOT set Content-Type manually — browser sets correct multipart boundary
+        });
+        if (resp.ok || resp.status === 201) {
+          const result = await resp.json();
+          addLog(`EVIDENCE UPLOADED ✓ (evidence ID: ${result.id}, url: ${result.url})`, "info");
+        } else {
+          const errText = await resp.text();
+          addLog(`EVIDENCE UPLOAD FAILED [${resp.status}]: ${errText}`, "error");
+        }
+      } catch (err) {
+        addLog(`EVIDENCE UPLOAD FAILED (network): ${err.message}`, "error");
+      }
+    }
+
+    // 1. Geolocation Setup
+    function startGPS() {
+      if (!("geolocation" in navigator)) {
+        addLog("[GPS] Geolocation API not supported by browser.", "error");
+        dotGps.className = "dot error";
+        return;
+      }
+
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          dotGps.className = "dot active";
+          currentLat = pos.coords.latitude;
+          currentLon = pos.coords.longitude;
+          gpsAccuracy.textContent = `±${Math.round(pos.coords.accuracy)}m`;
+          coordsVal.textContent = `${currentLat.toFixed(6)}, ${currentLon.toFixed(6)}`;
+          tsVal.textContent = `TIMESTAMP: ${new Date(pos.timestamp).toLocaleTimeString()}`;
+
+          // Speed handling
+          if (pos.coords.speed !== null && pos.coords.speed !== undefined && pos.coords.speed >= 0) {
+            currentSpeed = pos.coords.speed * 3.6; // m/s to km/h
+          } else if (lastPosition && lastPosTime) {
+            // Derive speed from consecutive GPS coordinates
+            const distM = haversineDistance(
+              lastPosition.latitude, lastPosition.longitude,
+              currentLat, currentLon
+            );
+            const dtSec = (pos.timestamp - lastPosTime) / 1000.0;
+            if (dtSec > 0) {
+              currentSpeed = (distM / dtSec) * 3.6;
+            }
+          }
+          lastPosition = { latitude: currentLat, longitude: currentLon };
+          lastPosTime = pos.timestamp;
+
+          // Heading handling
+          if (pos.coords.heading !== null && pos.coords.heading !== undefined && !isNaN(pos.coords.heading)) {
+            currentHeading = pos.coords.heading;
+          }
+
+          speedVal.textContent = currentSpeed.toFixed(1);
+          speedSub.textContent = `HEADING: ${currentHeading.toFixed(1)}°`;
+        },
+        (err) => {
+          addLog(`[GPS ERROR] ${err.message}`, "warn");
+          dotGps.className = "dot warning";
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 10000
+        }
+      );
+    }
+
+    // Haversine distance in meters
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // 2. DeviceMotion / Acceleration Setup
+    function startIMU() {
+      if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+        // iOS 13+ permission request
+        DeviceMotionEvent.requestPermission()
+          .then((permissionState) => {
+            if (permissionState === "granted") {
+              window.addEventListener("devicemotion", handleMotion);
+              dotImu.className = "dot active";
+              addLog("[IMU] Motion sensor access granted.", "info");
+            } else {
+              addLog("[IMU] Motion sensor permission denied.", "warn");
+              dotImu.className = "dot warning";
+            }
+          })
+          .catch((err) => {
+            addLog(`[IMU ERROR] ${err.message}`, "error");
+            dotImu.className = "dot error";
+          });
+      } else if ("DeviceMotionEvent" in window) {
+        window.addEventListener("devicemotion", handleMotion);
+        dotImu.className = "dot active";
+        addLog("[IMU] Motion sensor listener active.", "info");
+      } else {
+        addLog("[IMU] DeviceMotionEvent not supported.", "warn");
+        dotImu.className = "dot warning";
+      }
+    }
+
+    function handleMotion(event) {
+      dotImu.className = "dot active";
+
+      // Prefer gravity-compensated linear acceleration
+      let acc = event.acceleration;
+      if (!acc || (acc.x === null && acc.y === null && acc.z === null)) {
+        // Fallback to accelerationIncludingGravity
+        acc = event.accelerationIncludingGravity;
+      }
+
+      if (!acc) return;
+
+      const ax = acc.x || 0;
+      const ay = acc.y || 0;
+      const az = acc.z || 0;
+
+      // Forward/backward linear deceleration estimation along dominant axis or vector magnitude
+      // In mobile phone orientation mounted on dashboard, Y or Z axis corresponds to forward motion
+      const rawMag = Math.sqrt(ax * ax + ay * ay + az * az);
+
+      // Determine if deceleration is occurring (assuming negative forward axis or total shock)
+      // For general orientation, use vector magnitude of linear acceleration
+      const signedAccel = (ay < 0 || az < 0) ? -rawMag : rawMag;
+
+      processAcceleration(signedAccel);
+    }
+
+    function processAcceleration(accelValMps2) {
+      currentAccel = accelValMps2;
+      accelVal.textContent = currentAccel.toFixed(2);
+
+      // Check deceleration (negative acceleration)
+      const decelMag = -currentAccel; // Positive magnitude of deceleration
+
+      if (decelMag >= BRAKE_THRESHOLD) {
+        accelBox.className = "gauge-box danger";
+        const now = Date.now();
+        if (!decelStartTime) {
+          decelStartTime = now;
+        } else if (now - decelStartTime >= SUSTAINED_MS) {
+          if (now - lastTriggerTime >= COOLDOWN_MS) {
+            lastTriggerTime = now;
+            triggerHardBrakingEvent(decelMag);
+          }
+        }
+      } else {
+        decelStartTime = null;
+        if (decelMag >= 2.0) {
+          accelBox.className = "gauge-box highlight";
+        } else {
+          accelBox.className = "gauge-box";
+        }
+      }
+    }
+
+    // 5. Calculate Confidence & Trigger Event
+    // Flow: send event → receive event_id → start camera recording with that id captured
+    //       → on recording stop, upload evidence blob to POST /evidence
+    async function triggerHardBrakingEvent(decelMagnitude) {
+      // threshold-based heuristic, not ML.
+      const rawConf = (decelMagnitude - 4.5) / 5.0;
+      const clampedConf = Math.min(Math.max(rawConf, 0.0), 1.0);
+      // Map to 0.5 – 0.99
+      const confidence = parseFloat((0.5 + clampedConf * 0.49).toFixed(2));
+
+      // Show red alert banner
+      alertConfidence.textContent = `Confidence: ${Math.round(confidence * 100)}% | Decel: -${decelMagnitude.toFixed(1)} m/s²`;
+      alertBanner.style.display = "block";
+      setTimeout(() => {
+        alertBanner.style.display = "none";
+      }, 4000);
+
+      addLog(`[ALERT] ⚠️ HARD BRAKING DETECTED — Conf: ${Math.round(confidence * 100)}%`, "warn");
+
+      const eventPayload = {
+        vehicle_id: vehicleId,
+        timestamp: new Date().toISOString(),
+        latitude: parseFloat(currentLat.toFixed(6)),
+        longitude: parseFloat(currentLon.toFixed(6)),
+        speed: parseFloat(currentSpeed.toFixed(1)),
+        acceleration: parseFloat((-decelMagnitude).toFixed(2)),
+        heading: parseFloat(currentHeading.toFixed(1)),
+        event_type: "HARD_BRAKING",
+        confidence: confidence
+      };
+
+      // Step 1: POST /events — always sent regardless of camera state
+      const eventId = await sendEventToServer(eventPayload);
+
+      // Step 2: Start camera recording (non-blocking; runs in background)
+      // Pass eventId so the recording onstop handler can upload to /evidence.
+      // If camera is unavailable, evidence is silently skipped but event was already sent.
+      if (eventId !== null) {
+        startEvidenceRecording(eventId);
+      } else {
+        // Event send failed — still attempt a local-only recording for manual review
+        startEvidenceRecording(null);
+      }
+    }
+
+    // 7 & 8. Send Event JSON to Backend — returns event id on success, null on failure
+    async function sendEventToServer(payload) {
+      addLog(`[HTTP POST] Sending event to ${BACKEND_URL}...`, "info");
+      try {
+        const response = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok || response.status === 201) {
+          const result = await response.json();
+          dotNet.className = "dot active";
+          addLog(`EVENT SENT ✓ (ID: ${result.id})`, "info");
+          return result.id;   // return id so caller can link evidence
+        } else {
+          dotNet.className = "dot warning";
+          const errText = await response.text();
+          addLog(`[SERVER ERROR ${response.status}] ${errText}`, "error");
+          return null;
+        }
+      } catch (err) {
+        dotNet.className = "dot error";
+        addLog(`[NETWORK ERROR] Failed to send event: ${err.message}`, "error");
+        return null;
+      }
+    }
+
+    // Control Handlers
+    document.getElementById("btnStartSensors").addEventListener("click", () => {
+      startGPS();
+      startIMU();
+      startCamera();
+      addLog("[SYSTEM] Sensors initiated by user request.", "info");
+    });
+
+    // TEST CAMERA button: request camera independently (useful for permission verification)
+    document.getElementById("btnTestCamera").addEventListener("click", () => {
+      addLog("[CAMERA] Manual camera test requested.", "info");
+      startCamera();
+    });
+
+    document.getElementById("btnSimulateBrake").addEventListener("click", () => {
+      addLog("[TEST] Simulating hard braking impulse (-6.8 m/s²)...", "warn");
+      processAcceleration(-6.8);
+    });
+
+    document.getElementById("btnSendManual").addEventListener("click", () => {
+      const manualPayload = {
+        vehicle_id: vehicleId,
+        timestamp: new Date().toISOString(),
+        latitude: parseFloat(currentLat.toFixed(6)),
+        longitude: parseFloat(currentLon.toFixed(6)),
+        speed: parseFloat(currentSpeed.toFixed(1)),
+        acceleration: parseFloat(currentAccel.toFixed(2)),
+        heading: parseFloat(currentHeading.toFixed(1)),
+        event_type: "HARD_BRAKING",
+        confidence: 0.85
+      };
+      sendEventToServer(manualPayload);
+    });
+
+    // Auto start GPS on load
+    startGPS();
+  </script>
+</body>
+
+</html>

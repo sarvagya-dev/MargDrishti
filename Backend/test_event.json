@@ -1,0 +1,11 @@
+{
+  "vehicle_id": "MH-12-AB-1234",
+  "timestamp": "2026-09-06T21:40:00Z",
+  "latitude": 18.5204,
+  "longitude": 73.8567,
+  "speed": 65.5,
+  "acceleration": -4.2,
+  "heading": 180.0,
+  "event_type": "HARD_BRAKING",
+  "confidence": 0.95
+}
