@@ -172,6 +172,30 @@ export default function ClusterInvestigation({ id }) {
                 <div className="mt-1 text-xs text-slate-500">Avg. Event Confidence</div>
               </div>
             </div>
+            
+            {/* Multi-Vehicle Intelligence Badges */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <div className="rounded-lg border-2 border-navy bg-navy/5 px-4 py-2.5">
+                <div className="text-2xl font-bold text-navy">{hotspot.vehicle_count}</div>
+                <div className="text-xs text-slate-600">Unique Vehicles</div>
+              </div>
+              <div className="rounded-lg border-2 border-slate-300 bg-white px-4 py-2.5">
+                <div className="text-2xl font-bold text-navy">{hotspot.event_count}</div>
+                <div className="text-xs text-slate-600">Total Events</div>
+              </div>
+              {hotspot.possible_chain && (
+                <div className="rounded-lg border-2 border-orange-400 bg-orange-50 px-4 py-2.5">
+                  <div className="text-xl font-bold text-orange-700">⚠️ Chain Reaction</div>
+                  <div className="text-xs text-orange-600">Detected</div>
+                </div>
+              )}
+              {hotspot.vehicle_count === 1 && (
+                <div className="rounded-lg border-2 border-amber-400 bg-amber-50 px-4 py-2.5">
+                  <div className="text-sm font-bold text-amber-700">⚠️ Single Vehicle</div>
+                  <div className="text-xs text-amber-600">Insufficient Corroboration</div>
+                </div>
+              )}
+            </div>
           </Panel>
 
           <Panel title="Location Details">
@@ -183,23 +207,36 @@ export default function ClusterInvestigation({ id }) {
           </Panel>
 
           <Panel title="Collective Vehicle Intelligence">
-            <p className="text-sm text-slate-600">
-              {vehicleList.length} independent vehicles reported abnormal behaviour on the same
-              road segment.
-            </p>
-            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-              {[
-                "Same road segment",
-                "Same direction",
-                "Compatible time window",
-                "Multiple event types",
-              ].map((c) => (
-                <li key={c} className="flex items-center gap-2 text-sm text-slate-700">
-                  <span className="font-bold text-risk-low">✓</span>
-                  {c}
-                </li>
-              ))}
-            </ul>
+            {hotspot.vehicle_count === 1 ? (
+              <>
+                <p className="text-sm text-slate-600">
+                  Single vehicle event detected. Insufficient independent corroboration for high-confidence risk assessment.
+                </p>
+                <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                  <strong>Note:</strong> Multi-vehicle correlation increases confidence in road risk assessment.
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-slate-600">
+                  <strong>{vehicleList.length}</strong> independent vehicles reported abnormal behaviour on the same
+                  road segment, providing corroborated evidence of road risk.
+                </p>
+                <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {[
+                    "Same road segment",
+                    "Same direction",
+                    "Compatible time window",
+                    "Multiple event types",
+                  ].map((c) => (
+                    <li key={c} className="flex items-center gap-2 text-sm text-slate-700">
+                      <span className="font-bold text-risk-low">✓</span>
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </Panel>
 
           <Panel title="Contributing Vehicles">
@@ -208,10 +245,31 @@ export default function ClusterInvestigation({ id }) {
             ) : (
               <div className="divide-y divide-slate-100">
                 {vehicleList.map((v) => (
-                  <div key={`${v.id}-${v.event_id}`} className="flex items-center justify-between gap-3 py-2.5">
-                    <span className="text-sm font-semibold text-navy">{v.id}</span>
-                    <EventPill>{v.event_type}</EventPill>
-                    <span className="text-sm tabular-nums text-slate-500">{v.timestamp}</span>
+                  <div key={`${v.id}-${v.event_id}`} className="py-2.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold text-navy">{v.id}</span>
+                      <EventPill>{v.event_type}</EventPill>
+                      <span className="text-sm tabular-nums text-slate-500">{v.timestamp}</span>
+                    </div>
+                    {/* Telemetry Details */}
+                    <div className="mt-2 grid grid-cols-4 gap-2 text-xs text-slate-600">
+                      <div>
+                        <span className="text-slate-400">Speed:</span>{" "}
+                        <span className="font-medium">{v.speed?.toFixed(1) ?? "—"} km/h</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Accel:</span>{" "}
+                        <span className="font-medium">{v.acceleration?.toFixed(2) ?? "—"} m/s²</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Heading:</span>{" "}
+                        <span className="font-medium">{v.heading?.toFixed(0) ?? "—"}°</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Conf:</span>{" "}
+                        <span className="font-medium">{v.confidence != null ? `${Math.round(v.confidence * 100)}%` : "—"}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

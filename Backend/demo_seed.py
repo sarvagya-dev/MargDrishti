@@ -36,6 +36,8 @@ def _iso(dt: datetime.datetime) -> str:
 
 def _seed_event(payload: Dict[str, Any]) -> None:
     """Insert one event and run it through the risk engine — identical to POST /events."""
+    # Ensure all demo seed events are tagged with source='DEMO_SEED'
+    payload["source"] = "DEMO_SEED"
     stored = insert_event(payload)
     risk_engine.process_event_hook(stored)
 

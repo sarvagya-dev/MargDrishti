@@ -27,9 +27,16 @@ def init_db() -> None:
                 heading REAL NOT NULL,
                 event_type TEXT NOT NULL,
                 confidence REAL NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                source TEXT DEFAULT 'PHONE'
             );
         """)
+        
+        # Migrate existing events table to add source column if it doesn't exist
+        try:
+            cursor.execute("ALTER TABLE events ADD COLUMN source TEXT DEFAULT 'PHONE'")
+        except Exception:
+            pass  # column already exists
 
         # ── logical spatial hotspots (persistent road-risk locations) ────────
         # One row per unique physical road location across all time windows.
@@ -88,11 +95,13 @@ def init_db() -> None:
 def insert_event(event_data: Dict[str, Any]) -> Dict[str, Any]:
     with get_db_connection() as conn:
         cursor = conn.cursor()
+        # Get source from event_data, default to 'PHONE' if not provided
+        source = event_data.get("source", "PHONE")
         cursor.execute("""
             INSERT INTO events (
                 vehicle_id, timestamp, latitude, longitude,
-                speed, acceleration, heading, event_type, confidence
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                speed, acceleration, heading, event_type, confidence, source
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             event_data["vehicle_id"],
             event_data["timestamp"],
@@ -102,12 +111,14 @@ def insert_event(event_data: Dict[str, Any]) -> Dict[str, Any]:
             event_data["acceleration"],
             event_data["heading"],
             event_data["event_type"],
-            event_data["confidence"]
+            event_data["confidence"],
+            source
         ))
         conn.commit()
         event_id = cursor.lastrowid
         inserted_record = dict(event_data)
         inserted_record["id"] = event_id
+        inserted_record["source"] = source
         return inserted_record
 
 def get_all_events() -> List[Dict[str, Any]]:
@@ -115,7 +126,7 @@ def get_all_events() -> List[Dict[str, Any]]:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, vehicle_id, timestamp, latitude, longitude, "
-            "speed, acceleration, heading, event_type, confidence, created_at "
+            "speed, acceleration, heading, event_type, confidence, created_at, source "
             "FROM events ORDER BY id ASC"
         )
         return [dict(row) for row in cursor.fetchall()]
@@ -139,7 +150,7 @@ def get_event_by_id(event_id: int) -> Optional[Dict[str, Any]]:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, vehicle_id, timestamp, latitude, longitude, "
-            "speed, acceleration, heading, event_type, confidence, created_at "
+            "speed, acceleration, heading, event_type, confidence, created_at, source "
             "FROM events WHERE id = ?",
             (event_id,)
         )
@@ -265,3 +276,13 @@ def get_evidence_by_id(evidence_id: int) -> Optional[Dict[str, Any]]:
         cursor.execute("SELECT * FROM evidence WHERE id = ?", (evidence_id,))
         row = cursor.fetchone()
         return dict(row) if row else None
+
+# ─── Event cleanup by source ──────────────────────────────────────────────────
+
+def delete_events_by_source(source: str) -> int:
+    """Delete all events with the specified source. Returns count of deleted rows."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM events WHERE source = ?", (source,))
+        conn.commit()
+        return cursor.rowcount

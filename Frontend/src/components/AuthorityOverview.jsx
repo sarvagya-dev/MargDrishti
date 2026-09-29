@@ -151,11 +151,18 @@ export default function AuthorityOverview() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-navy">{h.road_segment}</span>
-                    <span
-                      className={`rounded border px-2 py-0.5 text-[11px] font-bold ${riskBadgeClass[h.risk_level]}`}
-                    >
-                      {h.risk_level}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {h.possible_chain && (
+                        <span className="rounded border border-orange-400 bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-orange-700" title="Chain reaction detected">
+                          ⚠️ CHAIN
+                        </span>
+                      )}
+                      <span
+                        className={`rounded border px-2 py-0.5 text-[11px] font-bold ${riskBadgeClass[h.risk_level]}`}
+                      >
+                        {h.risk_level}
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-0.5 text-xs text-slate-500">
                     {h.location} · {h.direction}

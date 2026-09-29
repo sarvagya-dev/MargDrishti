@@ -11,6 +11,7 @@ class EventCreate(BaseModel):
     heading: float = Field(..., ge=0.0, le=360.0, description="Heading in degrees (0 to 360)")
     event_type: str = Field(..., description="Type of event, e.g., HARD_BRAKING")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score between 0 and 1")
+    source: Optional[str] = Field(default="PHONE", description="Event source: PHONE, SIMULATOR, or DEMO_SEED")
 
 class EventResponse(EventCreate):
     id: int

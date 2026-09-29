@@ -30,6 +30,8 @@ def parse_iso(dt: datetime.datetime) -> str:
 
 def post_event(base_url: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     url = f"{base_url.rstrip('/')}/events"
+    # Ensure all simulator events are tagged with source='SIMULATOR'
+    payload["source"] = "SIMULATOR"
     req_data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         url,

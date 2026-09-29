@@ -23,6 +23,7 @@ ALLOWED_EXTENSIONS = {".webm", ".mp4", ".ogg", ".mov", ".avi"}
 from database import (
     init_db, insert_event, get_all_events, get_event_by_id,
     insert_evidence, get_evidence_for_event, get_evidence_by_id,
+    delete_events_by_source,
 )
 from models import (
     EventCreate, EventResponse, HotspotResponse,
@@ -216,6 +217,29 @@ def get_event_detail(event_id: int):
         for row in evidence_rows
     ]
     return EventWithEvidenceResponse(**event, evidence=evidence_list)
+
+# DELETE /events/simulator — safe cleanup of simulator-generated events only
+@app.delete("/events/simulator", status_code=status.HTTP_200_OK)
+def clear_simulator_events():
+    """
+    Delete all events where source='SIMULATOR'.
+    Never deletes PHONE or DEMO_SEED events.
+    
+    The risk engine recalculates hotspots automatically on the next GET /hotspots
+    call based on the remaining events. No manual recomputation needed.
+    """
+    try:
+        deleted_count = delete_events_by_source('SIMULATOR')
+        return {
+            "status": "success",
+            "deleted": deleted_count,
+            "message": f"Deleted {deleted_count} simulator event(s). PHONE and DEMO_SEED events preserved."
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete simulator events: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn
