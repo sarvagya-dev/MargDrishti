@@ -54,6 +54,7 @@ export default function AuthorityOverview() {
   const charts = getChartData();
   const { cases } = useApp();
   const [selectedId, setSelectedId] = useState(null);
+  const [riskFilter, setRiskFilter] = useState("ALL");
 
   // ── Async hotspot data from FastAPI backend ──────────────────────────────
   // refetchInterval keeps the map + cluster list live without a browser refresh.
@@ -73,13 +74,18 @@ export default function AuthorityOverview() {
   const resolvedHotspotIds = new Set(
     cases.filter((c) => c.status === "RESOLVED").map((c) => c.hotspot_id),
   );
-  const hotspots = sortByRisk(fetchedHotspots).filter(
+  const allHotspots = sortByRisk(fetchedHotspots).filter(
     (h) => !resolvedHotspotIds.has(h.id),
   );
 
-  const highRisk = hotspots.filter((h) => h.risk_level === "HIGH").length;
-  const events = hotspots.reduce((s, h) => s + h.event_count, 0);
-  const vehicleCount = hotspots.reduce((s, h) => s + h.vehicle_count, 0);
+  // Apply risk level filter
+  const hotspots = riskFilter === "ALL" 
+    ? allHotspots 
+    : allHotspots.filter((h) => h.risk_level === riskFilter);
+
+  const highRisk = allHotspots.filter((h) => h.risk_level === "HIGH").length;
+  const events = allHotspots.reduce((s, h) => s + h.event_count, 0);
+  const vehicleCount = allHotspots.reduce((s, h) => s + h.vehicle_count, 0);
   const openCases = cases.filter((c) =>
     ["NEW", "ASSIGNED", "IN_PROGRESS"].includes(c.status),
   ).length;
@@ -138,7 +144,38 @@ export default function AuthorityOverview() {
         </Panel>
 
         <Panel title="Active Risk Clusters">
-          <ul className="max-h-[520px] divide-y divide-slate-200 overflow-y-auto">
+          {/* Risk Level Filter */}
+          <div className="border-b border-slate-200 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {["ALL", "HIGH", "MEDIUM", "LOW"].map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => setRiskFilter(level)}
+                    className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      riskFilter === level
+                        ? level === "ALL"
+                          ? "bg-navy text-white"
+                          : level === "HIGH"
+                          ? "bg-red-600 text-white"
+                          : level === "MEDIUM"
+                          ? "bg-orange-500 text-white"
+                          : "bg-green-600 text-white"
+                        : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+              <div className="text-xs text-slate-500">
+                {hotspots.length} {hotspots.length === 1 ? "cluster" : "clusters"}
+              </div>
+            </div>
+          </div>
+
+          <ul className="max-h-[455px] divide-y divide-slate-200 overflow-y-auto">
             {hotspots.map((h) => (
               <li key={h.id}>
                 <button
@@ -149,9 +186,10 @@ export default function AuthorityOverview() {
                     selectedId === h.id ? "bg-slate-50" : ""
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-navy">{h.road_segment}</span>
-                    <div className="flex items-center gap-2">
+                  {/* Header row: name and badges */}
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-sm font-bold text-navy">{h.road_segment}</span>
+                    <div className="flex items-center gap-1.5">
                       {h.possible_chain && (
                         <span className="rounded border border-orange-400 bg-orange-50 px-1.5 py-0.5 text-[10px] font-bold text-orange-700" title="Chain reaction detected">
                           ⚠️ CHAIN
@@ -164,16 +202,32 @@ export default function AuthorityOverview() {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-500">
-                    {h.location} · {h.direction}
+
+                  {/* Location */}
+                  <div className="text-xs text-slate-500 mb-2">
+                    {h.location}
                   </div>
-                  <div className="mt-2 flex items-center gap-4 text-xs text-slate-600">
-                    <span>
-                      Score{" "}
-                      <strong style={{ color: RISK_HEX[h.risk_level] }}>{h.risk_score}</strong>
-                    </span>
-                    <span>{h.vehicle_count} vehicles</span>
-                    <span>{h.event_count} events</span>
+
+                  {/* Metrics row */}
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 text-[10px] uppercase tracking-wide">Score</span>
+                      <span className="font-bold tabular-nums" style={{ color: RISK_HEX[h.risk_level] }}>
+                        {h.risk_score}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 text-[10px] uppercase tracking-wide">Vehicles</span>
+                      <span className="font-bold tabular-nums text-navy">
+                        {h.vehicle_count}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-slate-400 text-[10px] uppercase tracking-wide">Events</span>
+                      <span className="font-bold tabular-nums text-navy">
+                        {h.event_count}
+                      </span>
+                    </div>
                   </div>
                 </button>
               </li>

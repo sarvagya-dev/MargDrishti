@@ -118,10 +118,10 @@ function transformHotspot(h) {
     event_types: Object.keys(h.event_breakdown ?? {}),
     // ── Display fields: resolved from known demo locations, or factual fallback
     // road_segment: human-readable cluster name (e.g. "Mumbai Risk Cluster") or
-    //               generic "Road Risk Cluster" for unrecognised phone events.
+    //               "Risk Hotspot — {coordinates}" for unmapped phone events.
     // location: city + state for demo seeds; raw coordinates for unknown spots.
     // direction: cardinal direction for demo seeds; "—" for unknown spots.
-    road_segment: demo?.road_segment ?? "Road Risk Cluster",
+    road_segment: demo?.road_segment ?? `Risk Hotspot — ${coordLabel}`,
     location:     demo?.location     ?? coordLabel,
     direction:    demo?.direction    ?? "—",
     // confidence is derived from real event rows in getHotspotDetails;
