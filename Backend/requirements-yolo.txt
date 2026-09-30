@@ -1,0 +1,14 @@
+# YOLO Perception Dependencies (OPTIONAL)
+# Install only if using YOLO vehicle detection features
+#
+# Installation:
+#   pip install -r requirements-yolo.txt
+#
+# Note: This installs CPU-only PyTorch. For GPU support, see PyTorch docs.
+
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+pillow>=10.0.0
+numpy>=1.24.0
