@@ -24,4 +24,5 @@ build/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbBackend/yolov8n.pt
+Backend/output/
